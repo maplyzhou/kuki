@@ -36,13 +36,19 @@
       <div class="bak-t">数据备份</div>
       <button class="btn ghost sm" id="btnExport">导出备份</button>
       <button class="btn ghost sm" id="btnImport">导入恢复</button>
-      <input type="file" id="fileImport" accept=".json,application/json" hidden>
       <div class="bak-time" id="lastBak">还没备份过</div>
     </div>
   </aside>
 
   <!-- ============ 右侧主区 ============ -->
   <main class="main">
+
+    <!-- 手机上的导航条：停在最上面不动，左边☰是完整菜单，右边是可以横向滑的板块标签 -->
+    <div class="mobar" id="mobar">
+      <button class="mobtn" id="menuBtn" title="打开菜单">☰</button>
+      <div class="mochips" id="mochips"></div>
+    </div>
+
     <div class="banner" id="banner" style="display:none">
       <div class="bk-ico">!</div>
       <div class="bk-body">
@@ -71,8 +77,30 @@
 <!-- 孩子模式的全屏层放这里，打印时只印这一层 -->
 <div id="kidHost"></div>
 
+<!-- 手机上的侧边菜单（点左上角☰ 打开，点外面关掉） -->
+<div class="drawer-mask" id="drawerMask"></div>
+<aside class="drawer glass" id="drawer">
+  <div class="dbrand">
+    <div class="logo">工</div>
+    <div style="min-width:0">
+      <div class="b1">我的工作台</div>
+      <div class="b2" id="drawerDate">—</div>
+    </div>
+    <button class="dclose" id="drawerClose" title="收起菜单">✕</button>
+  </div>
+  <div class="dnav" id="dnav"></div>
+  <div class="dfoot">
+    <button class="btn ghost sm" data-act="export">导出备份</button>
+    <button class="btn ghost sm" data-act="import">导入恢复</button>
+    <div class="bak-time" id="drawerBak">还没备份过</div>
+  </div>
+</aside>
+
 <!-- AI 读图用到的隐藏文件选择框 -->
 <input type="file" id="aiImg" accept="image/*" hidden>
+
+<!-- 导入备份用到的隐藏文件选择框（放在外面，手机上进菜单也能用） -->
+<input type="file" id="fileImport" accept=".json,application/json" hidden>
 
 <script src="exercises.js"></script>
 <script src="app.js"></script>

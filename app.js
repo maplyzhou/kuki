@@ -511,7 +511,37 @@ function renderNav(){
             '</button>';
   });
   $('nav').innerHTML = html;
+
+  /* ---- 手机上的两套导航：顶部一条横向标签（一直贴在顶上）+ ☰ 里的完整菜单 ---- */
+  var chipsEl = $('mochips');
+  if (chipsEl){
+    chipsEl.innerHTML = PAGES.map(function(p){
+      return '<button class="mochip' + (ui.page===p.id?' on':'') + '" data-act="goto" data-page="' + p.id + '">' +
+             esc(p.name) + '</button>';
+    }).join('');
+    var act = chipsEl.querySelector('.mochip.on');
+    if (act) chipsEl.scrollLeft = Math.max(0, act.offsetLeft - 70);   // 让当前这块露出来，但不跳页
+  }
+  var dnavEl = $('dnav');
+  if (dnavEl){
+    var h2 = '', lg = '';
+    PAGES.forEach(function(p){
+      if (p.group !== lg){ lg = p.group; h2 += '<div class="dnav-g">' + esc(p.group) + '</div>'; }
+      h2 += '<button class="dnav-i' + (ui.page===p.id?' on':'') + '" data-act="goto" data-page="' + p.id + '">' +
+              '<span class="ic">' + esc(p.ic) + '</span><span>' + esc(p.name) + '</span>' +
+              (p.ready ? '' : '<span class="tag">待做</span>') +
+            '</button>';
+    });
+    dnavEl.innerHTML = h2;
+  }
+  var dd = $('drawerDate');
+  if (dd) dd.textContent = cnFullDate();
 }
+
+/* 手机侧边菜单的开合 */
+function openDrawer(){ document.body.classList.add('drawer-on'); }
+function closeDrawer(){ document.body.classList.remove('drawer-on'); }
+function drawerIsOpen(){ return document.body.classList.contains('drawer-on'); }
 
 function currentPage(){
   for (var i=0;i<PAGES.length;i++){ if (PAGES[i].id === ui.page) return PAGES[i]; }
@@ -596,7 +626,9 @@ function fmtTime(ts){
 
 function renderBackupInfo(){
   var t = db.meta.lastBackupAt;
-  $('lastBak').textContent = t ? ('上次备份：' + fmtTime(t)) : '还没备份过';
+  var txt = t ? ('上次备份：' + fmtTime(t)) : '还没备份过';
+  var a = $('lastBak'); if (a) a.textContent = txt;
+  var b = $('drawerBak'); if (b) b.textContent = txt;   // 手机菜单里也显示一份
 }
 
 function exportBackup(){
@@ -772,25 +804,25 @@ var SEARCH_TPL = {
    cny   = 支持"人民币计价"换算：per-gram 按克折算（黄金），usd 直接乘汇率（比特币）
    page  = 点这一格去看详情的网址 */
 var MARKET = [
-  {id:'sse',     name:'上证指数',     grp:'A股大盘',   tx:'s_sh000001', em:'1.000001',   page:'https://gu.qq.com/sh000001'},
+  {id:'sse',     name:'上证指数',     short:'上证',  grp:'A股大盘',   tx:'s_sh000001', em:'1.000001',   page:'https://gu.qq.com/sh000001'},
   {id:'szse',    name:'深证成指',     grp:'A股大盘',   tx:'s_sz399001', em:'0.399001',   page:'https://gu.qq.com/sz399001'},
   {id:'chinext', name:'创业板指',     grp:'A股大盘',   tx:'s_sz399006', em:'0.399006',   page:'https://gu.qq.com/sz399006'},
   {id:'star50',  name:'科创50',       grp:'A股大盘',   tx:'s_sh000688', em:'1.000688',   page:'https://gu.qq.com/sh000688'},
 
-  {id:'dji',     name:'道琼斯',       grp:'隔夜外盘',  tx:'usDJI',      em:'100.DJIA',   page:'https://gu.qq.com/usDJI'},
+  {id:'dji',     name:'道琼斯',       short:'道指',  grp:'隔夜外盘',  tx:'usDJI',      em:'100.DJIA',   page:'https://gu.qq.com/usDJI'},
   {id:'spx',     name:'标普500',      grp:'隔夜外盘',  tx:'usINX',      em:'100.SPX',    page:'https://gu.qq.com/usINX'},
-  {id:'ixic',    name:'纳斯达克',     grp:'隔夜外盘',  tx:'usIXIC',     em:'100.NDX',    page:'https://gu.qq.com/usIXIC'},
+  {id:'ixic',    name:'纳斯达克',     short:'纳指',  grp:'隔夜外盘',  tx:'usIXIC',     em:'100.NDX',    page:'https://gu.qq.com/usIXIC'},
   {id:'hsi',     name:'恒生指数',     grp:'隔夜外盘',  tx:'hkHSI',      em:'100.HSI',    page:'https://gu.qq.com/hkHSI'},
   {id:'hstech',  name:'恒生科技指数', grp:'隔夜外盘',  tx:'hkHSTECH',   em:'124.HSTECH', page:'https://gu.qq.com/hkHSTECH'},
   {id:'n225',    name:'日经225',      grp:'隔夜外盘',                   em:'100.N225', cnbc:'.N225'},
   {id:'kospi',   name:'韩国KOSPI',    grp:'隔夜外盘',                   em:'100.KS11', cnbc:'.KS11'},
 
   {id:'udi',     name:'美元指数',     grp:'商品与汇率',                 em:'100.UDI',  cnbc:'.DXY'},
-  {id:'xau',     name:'黄金 · 伦敦金', grp:'商品与汇率', tx:'hf_XAU', em:'122.XAU',   unit:'美元/盎司', cny:'per-gram'},
+  {id:'xau',     name:'黄金 · 伦敦金', short:'黄金', grp:'商品与汇率', tx:'hf_XAU', em:'122.XAU',   unit:'美元/盎司', cny:'per-gram'},
   {id:'gc',      name:'COMEX黄金',    grp:'商品与汇率', tx:'hf_GC',  em:'101.GC00Y', unit:'美元/盎司', cny:'per-gram'},
-  {id:'cl',      name:'NYMEX原油',    grp:'商品与汇率', tx:'hf_CL',  em:'102.CL00Y', unit:'美元/桶'},
+  {id:'cl',      name:'NYMEX原油',    short:'原油', grp:'商品与汇率', tx:'hf_CL',  em:'102.CL00Y', unit:'美元/桶'},
   {id:'oil',     name:'布伦特原油',   grp:'商品与汇率', tx:'hf_OIL', em:'112.B00Y',  unit:'美元/桶'},
-  {id:'btc',     name:'比特币',       grp:'商品与汇率', huobi:'btcusdt', unit:'美元',  cny:'usd'}
+  {id:'btc',     name:'比特币',       short:'比特币', grp:'商品与汇率', huobi:'btcusdt', unit:'美元',  cny:'usd'}
 ];
 function marketById(id){
   for (var i = 0; i < MARKET.length; i++){ if (MARKET[i].id === id) return MARKET[i]; }
@@ -1307,7 +1339,7 @@ function boardMissingHtml(){
     if (MB.map[it.id] || vis.indexOf(it.id) < 0) return;
     if (it.tx || it.huobi) soft.push(it.name); else hard.push(it.name);
   });
-  if (!hard.length && !soft.length) return '这一屏 ' + vis.length + ' 项都有数据。';
+  if (!hard.length && !soft.length) return '';   // 都正常就不啰嗦
   var parts = [];
   if (hard.length){
     parts.push('这 ' + hard.length + ' 项取不到：<b>' + esc(hard.join('、')) +
@@ -1322,7 +1354,7 @@ function boardMissingHtml(){
 /* 一格行情长什么样。mini=true 是今日看板上的小条 */
 function boardCellHtml(it, mini){
   var d = MB.map[it.id];
-  var nm = it.name;
+  var nm = (mini && it.short) ? it.short : it.name;   // 今日看板那一小条用短名字，不然会被截成"黄金 · 伦敦金…"
   if (!d){
     var why;
     if (!MB.at) why = '正在取…';
@@ -1586,11 +1618,13 @@ function bondCardHtml(){
         '<div class="bondtabs">' + tabs + '</div>' +
         '<div class="bonddots">' + dots + '</div>' +
       '</div>' +
-      '<div class="hintline">左右滑动卡片（也可以点 ◀ ▶、点上面的期限、或者按键盘 ← →）切换期限。<br>' +
-      '美国国债来自 <b>CNBC</b>，取不到时自动用<b>美国财政部官方每日曲线</b>兜底' +
-        (BOND.usDate ? '（官方那份数据日期 ' + esc(BOND.usDate) + '）' : '') + '；' +
-      '中国国债来自 <b>CNBC</b>' + (BOND.cnErr ? '（' + esc(BOND.cnErr) + '）' : '') +
-        '，能取到的是 <b>2 年和 10 年</b>这两个期限，其余期限暂时没有能用的公开数据源。</div>' +
+      '<div class="hintline">左右滑动（或点 ◀ ▶）切换期限。' +
+        '<details class="exp"><summary>说明</summary><div class="exb">' +
+          '美国国债来自 CNBC，取不到时自动用美国财政部官方每日曲线兜底' +
+            (BOND.usDate ? '（官方那份数据日期 ' + esc(BOND.usDate) + '）' : '') + '；<br>' +
+          '中国国债来自 CNBC' + (BOND.cnErr ? '（' + esc(BOND.cnErr) + '）' : '') +
+            '，能取到 2 年和 10 年这两个期限。' +
+        '</div></details></div>' +
     '</div>';
 }
 function paintBonds(){
@@ -1634,15 +1668,7 @@ function renderMarket(){
 
   var html = '<div class="card glass">' +
       '<div class="card-hd"><div class="t">行情看板</div>' +
-        '<div class="r" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
-          '<button class="chip' + (ui.fxMode === 'cny' ? ' on' : '') + '" data-act="fxMode">' +
-            '黄金/比特币：' + (ui.fxMode === 'cny' ? '人民币' : '美元') + '</button>' +
-          '<span class="status" id="qStatus">' + boardStatusHtml() + '</span>' +
-        '</div></div>' +
-      '<div class="hintline">交易时段每 5 秒自动刷新，收盘后 30 秒一次；数字变了会闪一下。<br>' +
-      '数据自动在几家之间接力：<b>腾讯财经 → CNBC → 火币／币安（比特币）→ 东方财富</b>，每个格子上会写清楚这条是从哪来的。<br>' +
-      '点「黄金/比特币」那个按钮，可以在<b>美元</b>和<b>人民币</b>之间切换（人民币按实时汇率折算）。<br>' +
-      '<span id="qMissing">' + boardMissingHtml() + '</span></div>' +
+        '<div class="r"><span class="status" id="qStatus">' + boardStatusHtml() + '</span></div></div>' +
     '</div>';
 
   groups.forEach(function(g){
@@ -1650,7 +1676,12 @@ function renderMarket(){
     var cols = items.length <= 4 ? ('c' + items.length) : (items.length <= 6 ? 'c3' : 'c4');
     html += '<div class="card glass">' +
         '<div class="card-hd"><div class="t">' + esc(g) + '</div>' +
-          '<div class="r">' + items.length + ' 项</div></div>' +
+          '<div class="r" style="display:flex;align-items:center;gap:8px">' +
+            (g === '商品与汇率'
+              ? '<button class="chip' + (ui.fxMode === 'cny' ? ' on' : '') + '" data-act="fxMode" ' +
+                'title="黄金和比特币按美元还是人民币显示">计价：' + (ui.fxMode === 'cny' ? '人民币' : '美元') + '</button>'
+              : '') +
+            '<span>' + items.length + ' 项</span></div></div>' +
         '<div class="qgrid ' + cols + '">' +
           items.map(function(m){
             var cell = boardCellHtml(m, false);
@@ -1661,6 +1692,16 @@ function renderMarket(){
         '</div></div>';
     if (g === '商品与汇率') html += '<div id="bondHost">' + bondCardHtml() + '</div>';
   });
+
+  /* 第一屏只留重点；要看的细枝末节收进「说明」里 */
+  html += '<div class="hintline mkhelp">' +
+      '<span id="qMissing">' + boardMissingHtml() + '</span>' +
+      '<details class="exp"><summary>说明</summary><div class="exb">' +
+        '每 5 秒自动刷新（收盘后 30 秒一次），数字变了会闪一下。<br>' +
+        '每格写着这条数来自哪家：腾讯财经 / CNBC / 火币 / 币安 / 东方财富；点能点开的格子看详情。<br>' +
+        '「计价」按钮把黄金和比特币在美元与人民币之间切换（按实时汇率折算）。' +
+      '</div></details>' +
+    '</div>';
   return html;
 }
 
@@ -1744,16 +1785,17 @@ function newsListHtml(){
     var fresh = (!firstLoad && n.id > NEWS.lastId) ? ' fresh' : '';
     var hits = hitWords(n.text);
     var high = (newsLevel(n) === 'high');
-    var open = high || !!ui.newsOpen[n.id];
-    var brief = newsBrief(n.text);
-    var cut = brief.length < String(n.text || '').length;
-    return '<div class="nitem ' + (high ? 'high' : 'norm') + fresh + (hits.length ? ' hit' : '') + '">' +
+    var open = !!ui.newsOpen[n.id];
+    /* 重要的一眼能看到 3 行，不重要的只占 1 行，长文都有「展开」 */
+    var mayCut = String(n.text || '').length > (high ? 78 : 18);
+    return '<div class="nitem ' + (high ? 'high' : 'norm') + fresh + (hits.length ? ' hit' : '') +
+             (open ? ' open' : '') + '">' +
         '<div class="tm">' + esc(n.time) + '</div>' +
-        '<div class="tx">' + (high ? '<span class="lvtag">重要</span>' : '') + esc(open ? n.text : brief) +
+        '<div class="tx">' + (high ? '<span class="lvtag">重要</span>' : '') + esc(n.text) +
           (hits.length ? '<span class="hitmark">关注：' + esc(hits.join('·')) + '</span>' : '') + '</div>' +
         (n.tag ? '<div class="tg">' + esc(n.tag) + '</div>' : '') +
         '<div class="nact">' +
-          (cut ? '<button class="btn ghost tiny" data-act="' + (open ? 'newsFold' : 'newsOpen') +
+          (mayCut ? '<button class="btn ghost tiny" data-act="' + (open ? 'newsFold' : 'newsOpen') +
                  '" data-id="' + n.id + '">' + (open ? '收起' : '展开') + '</button>' : '') +
           (n.url ? '<a class="btn ghost tiny" href="' + esc(n.url) + '" target="_blank" ' +
                    'rel="noreferrer">原文</a>' : '') +
@@ -1786,10 +1828,12 @@ function renderNewsPage(){
         '<a class="btn ghost" href="' + EASTMONEY + '" target="_blank" rel="noreferrer">打开东方财富</a>' +
       '</div>' +
       '<div id="newsList">' + newsListHtml() + '</div>' +
-      '<div class="hintline">每 60 秒自动拉一次；新出现的会闪一下，命中关注词的会变浅黄并标出命中了哪个词。<br>' +
-      '<b>红色的「重要」</b>是照着金十数据的思路挑的：美联储／央行政策、关税制裁、重磅数据、暴涨暴跌、突发事件这类会影响大盘的；' +
-      '公司公告这种又长又琐碎的只留一行简介，想细看就点「展开」。<br>' +
-      '金十数据自己的网站抓不到（它要求特殊身份标识），所以内容来自新浪财经 7×24 全球快讯，覆盖国内外消息。</div>' +
+      '<div class="hintline">每 60 秒自动刷新；命中关注词的会标出来，标红的「重要」是会影响大盘的那几条。' +
+        '<details class="exp"><summary>说明</summary><div class="exb">' +
+          '「重要」是照着金十数据的思路挑的：美联储／央行政策、关税制裁、重磅数据、暴涨暴跌、突发事件这类；' +
+          '又长又琐碎的公告只占一行，想细看点「展开」。<br>' +
+          '内容来自新浪财经 7×24 全球快讯（金十自己的网站不给第三方读）。' +
+        '</div></details></div>' +
     '</div>';
 }
 
@@ -2386,10 +2430,7 @@ function hwFixedPanelHtml(){
         '<button class="btn primary" data-act="hwFixedAdd">加一条</button>' +
       '</div>' +
       '<div class="hintline">' +
-        '· 固定作业<b>只在「今天」自动加</b>，你翻看以前的日子不会被追加上去。<br>' +
-        '· 改内容或删掉，<b>只影响以后</b>；已经加进清单的记录不会变（打过钩的更会留着）。<br>' +
-        '· 删掉后只停止「以后每天自动加」，<b>今天已经加进清单的那几条会留着</b>；' +
-        '要去掉哪一条，在下面的清单里单独点「删除」。' +
+        '固定作业只在「今天」自动加；改或删<b>只影响以后</b>，今天已经加进清单的会留着。' +
       '</div></div>';
 }
 
@@ -2744,9 +2785,10 @@ function renderHomeworkPage(){
             '老师群里发消息了，就点上面那个蓝色的「＋ 添加作业」，把消息粘进去点一下「识别作业」，' +
             '它会自动按科目拆成一条条、分成一组一组。</div>') +
       '</div>' +
-      '<div class="hintline">作业按科目分好了组，<b>点科目名字就能收起／展开</b>（收起状态会记住）。' +
-      '打钩之后会自动沉到本组最下面并变灰，不会消失。' +
-      '「孩子模式」会把今天的清单放大显示，可以全屏给孩子看或者打印出来。</div>' +
+      '<div class="hintline"><b>点科目名</b>收起／展开；打钩后会自动沉到本组最下面变灰。' +
+        '<details class="exp"><summary>说明</summary><div class="exb">' +
+          '收起状态会记住；「孩子模式」把清单放大，可以全屏给孩子看或打印。' +
+        '</div></details></div>' +
     '</div>';
   return html;
 }
@@ -2920,8 +2962,10 @@ function renderReadingPage(){
       (ui.bkAdd ? bkForm(null, true) : '') +
       (ui.bkEdit ? bkForm(bkById(ui.bkEdit), false) : '') +
       '<div id="bkList">' + bkListHtml() + '</div>' +
-      '<div class="hintline">「想在读的书直接打开」的做法：在书里填上本地文件路径，' +
-      '卡片上就会出现「打开这本书」。PDF 和 TXT 浏览器能直接看；EPUB 浏览器打不开，建议用别的阅读软件。</div>' +
+      '<div class="hintline">在书里填上本地路径，卡片上就会出现「打开这本书」。' +
+        '<details class="exp"><summary>说明</summary><div class="exb">' +
+          'PDF 和 TXT 浏览器能直接打开；EPUB 浏览器打不开，建议用别的阅读软件看。' +
+        '</div></details></div>' +
     '</div>';
 }
 
@@ -3199,11 +3243,9 @@ function renderVaultPage(){
       '<div class="card-hd"><div class="t">密码本</div>' +
         '<div class="r">共 ' + db.vault.length + ' 条' + (locked ? ' · 已设查看口令' : '') + '</div></div>' +
       '<div class="warnbox">' +
-        '<b>安全说明（请一定看一遍）：</b>这些东西 <b>只存在你这台电脑的浏览器里，不联网、不上传</b>。' +
-        '但它们是以<b>明文</b>躺在浏览器数据里的 —— 谁能摸到你这台电脑、打开这个页面，就能看到。' +
-        '所以：<b>最要紧的账号（网银、支付类）请别放这里</b>。' +
-        (locked ? '你已经设了查看口令，点开密码本要先输口令。'
-                : '想挡一下"别人随手点开"，可以设一个查看口令。') +
+        '<b>安全：</b>只存在这台电脑的浏览器里，不联网、不上传；但是<b>明文</b>存的，' +
+        '谁能打开这台电脑的这个页面就能看到 —— <b>网银、支付类别放这里</b>。' +
+        (locked ? '你已经设了查看口令。' : '可以设一个查看口令挡一下。') +
       '</div>' +
       '<div class="toolbar">' +
         '<input class="inp grow" placeholder="搜名称、账号或备注…" value="' + esc(ui.vbQuery || '') + '" ' +
@@ -3333,10 +3375,11 @@ function renderMinutesPage(){
           '</div>'
         : '') +
       '<div class="hintline">' +
-        '转写是在你电脑上本地跑的：<b>免费、不联网、不上传</b>，录音也只留在你自己硬盘上。<br>' +
-        '<b>关于「区分不同说话人」</b>：免费的本地方案做不到精确认人。' +
-        '所以这里换了个更实用的做法 —— 让 AI 从内容里推断「谁负责什么」' +
-        '（比如"张总你把这个发一下" → 负责人写成张总）。' +
+        '转写在你自己电脑上本地跑：免费、不联网、录音不离开本机。' +
+        '<details class="exp"><summary>说明</summary><div class="exb">' +
+          '免费的本地方案做不到精确认人（分不清哪句是谁说的），所以改成让 AI 从内容里推断「谁负责什么」' +
+          '（比如"张总你把这个发一下" → 负责人写成张总）。' +
+        '</div></details>' +
       '</div>' +
     '</div>';
 
@@ -4011,13 +4054,6 @@ function renderFitnessPage(){
           ? '<a class="btn ghost sm" target="_blank" rel="noreferrer" href="' + esc(fitCoach().home) + '">去他的抖音主页</a>' +
             '<button class="btn ghost sm" data-act="coachHome" data-v="clear">清掉主页链接</button>'
           : '<button class="btn ghost sm" data-act="coachHome">填他的抖音主页链接</button>') +
-        '<span style="font-size:11.5px;color:var(--ink-3)">点动作右边的「看讲解」＝去抖音搜「讲解人 + 动作名」</span>' +
-      '</div>' +
-      '<div class="toolbar" style="margin-bottom:10px">' +
-        '<span style="font-size:11.5px;color:var(--ink-3)">' +
-          '真人示范图<b>直接从开源图库（免费、公有领域）显示</b>，不用下载。' +
-          '有 ' + (typeof EX_IMG_PATHS !== 'undefined' ? Object.keys(EX_IMG_PATHS).length : 0) +
-          ' 个动作有真人图；图库没有的那几个、或者连不上网时，显示我画的小人动画。</span>' +
       '</div>' +
       '<div class="chips">' + chips + '</div>' +
       '<div class="exgrid">' + list.map(exCardHtml).join('') + '</div>' +
@@ -4220,16 +4256,13 @@ function renderAiPage(){
       '</div>' +
       aiTestHtml() +
       '<div class="hintline" style="margin-top:16px">' +
-        '<b>手写照片读得不够准？</b>把「识图专用模型」填上更聪明的那一个（你账号里有 ' +
-        '<code>deepseek-v4-pro</code>），再试一次同一张图。认字这种细活，模型强一点差别很明显，' +
-        '一张图也就贵一两分钱。<br>' +
-        '<b>填好之后能干什么：</b><br>' +
-        '· <b>AI 读图</b>：在「孩子作业」「自选股」「待取快递」的粘贴框旁边点一下，选张截图或照片，' +
-        '它把里面的文字抄出来、直接填进框里（手写拍照也行 —— 前提是自检第④步是绿的）。<br>' +
-        '· <b>以后的股票分析</b>：把某支股票的行情和新闻喂给它，让它写一段分析。这个用的是文字能力，' +
-        '跟看不看图没关系。<br>' +
-        '<b>花钱吗：</b>读一张图大约消耗 2000-4000 tokens，按 DeepSeek 的价格大约几分钱一次；' +
-        '写一段股票分析大约一分钱以内。具体以服务商官网为准。' +
+        '填好密钥就能用「AI 读图」（手写照片也行）和「股票分析」。' +
+        '<details class="exp"><summary>说明</summary><div class="exb">' +
+          '· <b>AI 读图</b>：在「孩子作业」「自选股」「待取快递」的粘贴框旁边点一下，选张截图或照片，' +
+          '它会认出文字；识图不够准时，把「识图专用模型」填成更强的那一个（比如 <code>deepseek-v4-pro</code>）再试。<br>' +
+          '· <b>股票分析</b>：在自选股里对某支股票点「AI 分析」，它会结合行情、K线和相关快讯写一段研判。<br>' +
+          '· <b>花钱吗</b>：读一张图大约几分钱、写一段分析一分钱以内（按服务商官网为准）。' +
+        '</div></details>' +
       '</div>' +
     '</div>';
 }
@@ -4501,10 +4534,50 @@ function pcFindStation(flat){
   return best;
 }
 
+/* 把"几号柜/几号门/第几排"摘出来。
+   快递短信里常见的写法：
+     丰巢智能柜 3 号柜       → 3 号柜
+     A 区 12 号柜            → A 区 12 号柜
+     柜号：5                 → 5 号柜
+     第 3 排货架 / 3 号货架   → 3 号货架
+     12 号门 / 12 号箱        → 12 号门
+   注意别把取件码里的数字（如 8-2-1234）或手机号当成柜号。 */
+function pcFindCabinet(flat){
+  var s = String(flat || '');
+  /* 先把手机号、取件码里那种 x-y-z 的编号挖掉，免得误伤 */
+  var clean = s.replace(/1[3-9]\d{9}/g, ' ')
+               .replace(/\d{1,3}\s*-\s*\d{1,3}\s*-\s*\d{2,6}/g, ' ')
+               .replace(/\d{1,3}\s*-\s*\d{2,6}/g, ' ');
+  var m;
+  /* 「柜号：5」这种直接写着柜号的 */
+  m = clean.match(/柜号\s*[:：]?\s*([A-Za-z0-9]{1,4})/);
+  if (m) return m[1] + ' 号柜';
+  /* 「A 区 3 号柜」「第 3 号柜」「3 号柜」 */
+  m = clean.match(/([A-Za-z]\s*区\s*)?第?\s*(\d{1,3})\s*号柜/);
+  if (m){
+    var z = m[1] ? m[1].replace(/[^A-Za-z]/g, '').toUpperCase() : '';
+    return (z ? z + ' 区 ' : '') + m[2] + ' 号柜';
+  }
+  /* 「12 号门」「3 号箱」 */
+  m = clean.match(/(\d{1,3})\s*号门/);
+  if (m) return m[1] + ' 号门';
+  m = clean.match(/(\d{1,3})\s*号箱/);
+  if (m) return m[1] + ' 号箱';
+  /* 「3 号货架」「第 3 排货架」 */
+  m = clean.match(/第?\s*(\d{1,3})\s*号货架/);
+  if (m) return m[1] + ' 号货架';
+  m = clean.match(/第?\s*(\d{1,3})\s*排/);
+  if (m) return '第 ' + m[1] + ' 排';
+  /* 「A 区 12 号」 */
+  m = clean.match(/([A-Za-z])\s*区\s*(\d{1,3})\s*号/);
+  if (m) return m[1].toUpperCase() + ' 区 ' + m[2] + ' 号';
+  return '';
+}
+
 function parcelParse(raw){
   var s = String(raw || '');
   var flat = s.replace(/\s+/g, ' ').trim();
-  var r = {code:'', company:'', no:'', station:'', phone:'', when:'', raw:s};
+  var r = {code:'', company:'', no:'', station:'', cabinet:'', phone:'', when:'', raw:s};
   var m;
 
   /* 取件码 */
@@ -4544,6 +4617,9 @@ function parcelParse(raw){
     if (m) r.station = m[1];
   }
 
+  /* 几号柜 / 几号门 / 第几排货架：蜂巢、菜鸟驿站都爱这么写 */
+  r.cabinet = pcFindCabinet(flat);
+
   /* 电话 / 取件时间提醒 */
   m = flat.match(/1[3-9]\d{9}/);
   if (m) r.phone = m[0];
@@ -4567,6 +4643,7 @@ function pcDraftHtml(){
       '<div style="font-size:13px;font-weight:500;margin-bottom:10px">' +
         (conf ? '摘出来这些，核对一下（可以直接改）：' : '没能自动认出取件码，手动填一下吧：') + '</div>' +
       f('pcCode', '取件码', pcDraft.code, '例如 8-2-1234') +
+      f('pcCab', '几号柜', pcDraft.cabinet, '例如 3 号柜 / A 区 12 号') +
       f('pcCompany', '快递公司', pcDraft.company, '例如 中通') +
       f('pcStation', '放哪儿了', pcDraft.station, '例如 菜鸟驿站（小区门口）') +
       f('pcNo', '单号', pcDraft.no, '一般不填也行') +
@@ -4586,8 +4663,9 @@ function renderParcelPage(){
   function card(p, done){
     return '<div class="pcard' + (done ? ' done' : '') + '">' +
         '<div class="prow">' +
-          '<div style="flex:1;min-width:0">' +
-            '<div class="pcode">' + esc(p.code || '（没填取件码）') + '</div>' +
+          '<div class="pinfo">' +
+            '<div class="pcode">' + esc(p.code || '（没填取件码）') +
+              (p.cabinet ? '<span class="pbin">' + esc(p.cabinet) + '</span>' : '') + '</div>' +
             '<div class="pmeta">' +
               (p.company ? '<span class="pill cat">' + esc(p.company) + '</span>' : '') +
               (p.station ? '<span>' + esc(p.station) + '</span>' : '') +
@@ -4614,7 +4692,7 @@ function renderParcelPage(){
       '<div class="toolbar">' +
         '<button class="btn primary" data-act="pcPasteToggle">' + (pcPaste ? '收起' : '粘贴取件短信') + '</button>' +
         '<span style="font-size:12px;color:var(--ink-3)">把快递短信（或者物流信息）整段粘进来，' +
-          '它会自己把取件码、单号、放哪儿了摘出来。</span>' +
+          '它会自己把取件码、几号柜、放哪儿了、单号摘出来。</span>' +
       '</div>' +
       (pcPaste
         ? '<div class="hw-paste" style="margin-bottom:14px">' +
@@ -4635,11 +4713,6 @@ function renderParcelPage(){
         ? '<div class="done-hd"><span>已取走 ' + got.length + ' 个</span><span class="ln"></span></div>' +
           got.map(function(p){ return card(p, true); }).join('')
         : '') +
-      '<div class="hintline">' +
-        '<b>关于「自动调取手机短信和支付宝物流」：</b>电脑上的网页读不到手机短信，支付宝也没有给个人开放接口 —— ' +
-        '这是系统和 App 的限制，不是我不想做。这一版的做法是「收到短信复制一下、粘进来」，' +
-        '以后做手机版（App 或小程序）的时候，才能真的自动读。' +
-      '</div>' +
     '</div>';
 }
 
@@ -4708,6 +4781,7 @@ document.addEventListener('click', function(ev){
   var id  = el.getAttribute('data-id');
 
   if (act === 'goto'){
+    closeDrawer();               // 手机上从菜单点进来的，切完就收起来
     ui.page = el.getAttribute('data-page');
     ui.editingId = null;
     Q.at = 0;                                   // 换了页面，标的清单也变了，行情要重新取
@@ -5152,7 +5226,7 @@ document.addEventListener('click', function(ev){
     }
     db.parcels.push({
       id: uid(), code: code, company: getV('pcCompany'), station: getV('pcStation'),
-      no: getV('pcNo'), phone: getV('pcPhone'),
+      cabinet: getV('pcCab'), no: getV('pcNo'), phone: getV('pcPhone'),
       when: (pcDraft.when || ''), raw: pcDraft.raw || '',
       taken: false, takenAt: null, createdAt: Date.now()
     });
@@ -5168,13 +5242,21 @@ document.addEventListener('click', function(ev){
     if (pu){ pu.taken = false; pu.takenAt = null; save(); render(); }
   } else if (act === 'pcCopy'){
     var pcp = pcById(el.getAttribute('data-id'));
-    if (pcp) copyText(pcp.code, '取件码已复制');
+    if (pcp){
+      /* 到了柜子跟前要的是「取件码 + 几号柜」，一起复制省得来回看 */
+      var txt = pcp.code || '';
+      if (pcp.cabinet) txt += (txt ? '　' : '') + pcp.cabinet;
+      if (pcp.station && !pcp.cabinet) txt += (txt ? '　' : '') + pcp.station;
+      copyText(txt, '取件码已复制');
+    }
   } else if (act === 'pcEdit'){
     var pe = pcById(el.getAttribute('data-id'));
     if (!pe) return;
     var nc = prompt('改取件码：', pe.code || '');
     if (nc === null) return;
     pe.code = String(nc).trim();
+    var nq = prompt('改「几号柜」（没有就留空）：', pe.cabinet || '');
+    if (nq !== null) pe.cabinet = String(nq).trim();
     var ns = prompt('改「放哪儿了」：', pe.station || '');
     if (ns !== null) pe.station = String(ns).trim();
     save();
@@ -5186,18 +5268,6 @@ document.addEventListener('click', function(ev){
     db.parcels = db.parcels.filter(function(p){ return p.id !== pd.id; });
     save();
     render();
-
-  /* ---------------- 图片文字小工具说明 ---------------- */
-  } else if (act === 'ocrHelp'){
-    alert('图片里的字怎么弄成文字（不要钱的土办法，但很好用）：\n\n' +
-          '1. 打开工作台文件夹里的「小工具」文件夹\n' +
-          '2. 双击「识别图片文字」\n' +
-          '3. 弹出来的窗口里选那张截图（也可以把图片直接拖到它上面）\n' +
-          '4. 等两三秒，它会说「识别完成」—— 文字已经复制到剪贴板了\n' +
-          '5. 回到这里，在这个粘贴框里按 Ctrl+V，再点「识别作业」\n\n' +
-          '它是用 Windows 系统自带的识别引擎跑的：不用联网、不上传、不花钱、不用装东西。\n\n' +
-          '说明一下为什么不能做成"页面里点上传"：本地打开的网页被浏览器禁止调用电脑上的程序，' +
-          '这是浏览器的安全限制，不是偷懒。');
 
   /* ---------------- 健身 ---------------- */
   } else if (act === 'fitOpenToggle'){
@@ -5493,6 +5563,29 @@ function on(id, evt, fn){
 }
 on('btnExport', 'click', exportBackup);
 on('btnImport', 'click', function(){ var f = $('fileImport'); if (f) f.click(); });
+
+/* 手机上的菜单：左上角☰ 打开，点遮罩/✕/选完板块关掉；也从屏幕左边缘往右滑能拉出来 */
+on('menuBtn', 'click', function(){ drawerIsOpen() ? closeDrawer() : openDrawer(); });
+on('drawerClose', 'click', closeDrawer);
+on('drawerMask', 'click', closeDrawer);
+var edgeX = null, edgeY = null;
+document.addEventListener('touchstart', function(ev){
+  if (!ev.touches || !ev.touches.length) return;
+  edgeX = ev.touches[0].clientX;
+  edgeY = ev.touches[0].clientY;
+}, { passive:true });
+document.addEventListener('touchend', function(ev){
+  if (edgeX === null) return;
+  var t = (ev.changedTouches && ev.changedTouches[0]) || null;
+  var dx = t ? (t.clientX - edgeX) : 0;
+  var dy = t ? Math.abs(t.clientY - edgeY) : 0;
+  var fromEdge = edgeX < 26;
+  edgeX = null; edgeY = null;
+  if (Math.abs(dx) < 55 || dy > Math.abs(dx)) return;      // 斜着划的当成滚动，不理
+  if (!drawerIsOpen() && fromEdge && dx > 0){ openDrawer(); }
+  else if (drawerIsOpen() && dx < 0){ closeDrawer(); }
+}, { passive:true });
+document.addEventListener('keydown', function(ev){ if (ev.key === 'Escape') closeDrawer(); });
 on('fileImport', 'change', function(ev){
   var f = ev.target.files && ev.target.files[0];
   if (f) importBackup(f);
