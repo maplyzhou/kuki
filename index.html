@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>我的工作台</title>
+<link rel="stylesheet" href="app.css">
+<!-- 手机上"添加到主屏幕"后会像 App 一样有图标、独立窗口 -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#F5F2ED">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="工作台">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+<div class="aura"><i></i><i></i><i></i><i></i></div>
+<div class="grain"></div>
+
+<div class="shell">
+
+  <!-- ============ 左侧导航 ============ -->
+  <aside class="side glass">
+    <div class="brand">
+      <div class="logo">工</div>
+      <div style="min-width:0">
+        <div class="b1">我的工作台</div>
+        <div class="b2" id="brandDate">—</div>
+      </div>
+    </div>
+
+    <nav id="nav" class="nav"></nav>
+
+    <div class="side-foot">
+      <div class="bak-t">数据备份</div>
+      <button class="btn ghost sm" id="btnExport">导出备份</button>
+      <button class="btn ghost sm" id="btnImport">导入恢复</button>
+      <input type="file" id="fileImport" accept=".json,application/json" hidden>
+      <div class="bak-time" id="lastBak">还没备份过</div>
+    </div>
+  </aside>
+
+  <!-- ============ 右侧主区 ============ -->
+  <main class="main">
+    <div class="banner" id="banner" style="display:none">
+      <div class="bk-ico">!</div>
+      <div class="bk-body">
+        <div class="bk-t" id="bannerTitle">该备份了</div>
+        <div class="bk-d" id="bannerDesc">数据存在浏览器里，建议点左下角「导出备份」存一份到硬盘。</div>
+      </div>
+      <button class="btn ghost sm" id="bannerAct">知道了</button>
+    </div>
+
+    <header class="topbar">
+      <div>
+        <h1 id="pageTitle">今日看板</h1>
+        <div class="sub" id="pageSub">打开第一眼要看的东西</div>
+      </div>
+      <div class="topright">
+        <span class="badge"><span class="dot ok" id="dot"></span><span id="todayText">—</span></span>
+        <span class="clock" id="clock">--:--:--</span>
+      </div>
+    </header>
+
+    <section id="view" class="view"></section>
+  </main>
+
+</div>
+
+<!-- 孩子模式的全屏层放这里，打印时只印这一层 -->
+<div id="kidHost"></div>
+
+<!-- AI 读图用到的隐藏文件选择框 -->
+<input type="file" id="aiImg" accept="image/*" hidden>
+
+<script src="exercises.js"></script>
+<script src="app.js"></script>
+
+<!-- 保险：万一某个文件没加载成功（被误删、改坏、放错位置），不要白屏，直接说清楚怎么办 -->
+<script>
+setTimeout(function(){
+  if (typeof db !== 'undefined' && typeof render === 'function') return;
+  var d = document.createElement('div');
+  d.id = 'loadFail';
+  d.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;' +
+    'padding:40px;background:linear-gradient(150deg,#F5F2ED,#EEF1F3);' +
+    'font-family:-apple-system,"Microsoft YaHei",sans-serif';
+  d.innerHTML =
+    '<div style="max-width:560px;background:rgba(255,255,255,.78);border:1px solid #fff;border-radius:24px;' +
+      'padding:32px 34px;box-shadow:0 10px 34px rgba(45,52,64,.08);color:#2B2F36;line-height:2">' +
+      '<div style="font-size:20px;font-weight:600;margin-bottom:10px">工作台没打开成功</div>' +
+      '<div style="font-size:13.5px;color:#6E7480">' +
+        '原因一般是这几个：<br>' +
+        '① 文件夹里的 <b>app.js / app.css / exercises.js</b> 有一个被删了或改名了；<br>' +
+        '② 这几个文件没和 index.html 放在同一个文件夹里；<br>' +
+        '③ 文件被别的东西改坏了。' +
+      '</div>' +
+      '<div style="font-size:13.5px;color:#6E7480;margin-top:12px">' +
+        '先按一下下面的按钮重试；还不行就把这一页截图发我，我来修（你的数据不会因为这个丢）。' +
+      '</div>' +
+      '<div style="margin-top:20px;display:flex;gap:10px">' +
+        '<button onclick="location.reload()" style="font:inherit;font-size:13px;padding:10px 20px;border-radius:100px;' +
+          'border:1px solid rgba(255,255,255,.6);background:linear-gradient(160deg,#9FB0C2,#8195AC);color:#fff;cursor:pointer">' +
+          '重新加载</button>' +
+        '<button onclick="this.parentNode.parentNode.remove()" style="font:inherit;font-size:13px;padding:10px 20px;' +
+          'border-radius:100px;border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.7);color:#6E7480;cursor:pointer">' +
+          '先关掉这条提示</button>' +
+      '</div>' +
+    '</div>';
+  document.body.appendChild(d);
+}, 1500);
+</script>
+</body>
+</html>

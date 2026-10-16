@@ -1,0 +1,17 @@
+{
+  "name": "我的工作台",
+  "short_name": "工作台",
+  "description": "行情、快讯、待办、孩子作业、健身、书单……都在这一个页面里",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F5F2ED",
+  "theme_color": "#F5F2ED",
+  "lang": "zh-CN",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
